@@ -84,7 +84,7 @@ jobs:
           # Add debug output to verify the rule was revoked
           az network nsg show --resource-group $RG_NAME --name $NSG_NAME
 
-      - name: Clean up
+      - name: Clean ups
         run: echo "Nothing to clean up for Azure CLI"
 
       - name: Deployment complete message
