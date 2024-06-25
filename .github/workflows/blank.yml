@@ -1,0 +1,93 @@
+name: Deploy to Tonetracker application on test server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Update package lists
+        run: sudo apt-get update
+
+      - name: Install zip and unzip
+        run: sudo apt-get install zip unzip -y
+
+      - name: Install curl
+        run: sudo apt-get install curl -y
+
+      - name: Install Azure CLI
+        run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      - name: Verify Azure CLI installation
+        run: az --version
+
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set Azure subscription
+        run: az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get public IP
+        id: get_ip
+        run: echo "ip=$(curl -s ifconfig.me)" >> $GITHUB_ENV
+
+      - name: Whitelist inbound rule in network security group
+        run: |
+          IP=${{ env.ip }}
+          NSG_NAME="your-nsg-name"  # Replace with your Network Security Group name
+          RG_NAME="your-resource-group"  # Replace with your Resource Group name
+          az network nsg rule create \
+            --resource-group $RG_NAME \
+            --nsg-name $NSG_NAME \
+            --name AllowGithubRunner \
+            --protocol Tcp \
+            --direction Inbound \
+            --priority 1000 \
+            --source-address-prefixes ${IP} \
+            --source-port-ranges "*" \
+            --destination-address-prefixes "*" \
+            --destination-port-ranges 22 \
+            --access Allow
+          # Add debug output to verify the rule was applied
+          az network nsg show --resource-group $RG_NAME --name $NSG_NAME
+
+      - name: Run SSH commands on remote server
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          port: ${{ secrets.PORT }}
+          password: ${{ secrets.PASSWORD }}
+          script: |
+            cd /opt/Tonetracker/Tone-Tracker-Frontend
+            git pull
+            yarn install
+            yarn build
+            sudo pm2 restart all
+
+      - name: Remove inbound rule in network security group
+        run: |
+          IP=${{ env.ip }}
+          NSG_NAME="your-nsg-name"  # Replace with your Network Security Group name
+          RG_NAME="your-resource-group"  # Replace with your Resource Group name
+          az network nsg rule delete \
+            --resource-group $RG_NAME \
+            --nsg-name $NSG_NAME \
+            --name AllowGithubRunner
+          # Add debug output to verify the rule was revoked
+          az network nsg show --resource-group $RG_NAME --name $NSG_NAME
+
+      - name: Clean up
+        run: echo "Nothing to clean up for Azure CLI"
+
+      - name: Deployment complete message
+        run: echo "Deployment Completed. Please check the deployed changes on the development server!"
