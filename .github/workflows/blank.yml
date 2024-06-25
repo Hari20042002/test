@@ -68,7 +68,7 @@ jobs:
           port: ${{ secrets.PORT }}
           password: ${{ secrets.PASSWORD }}
           script: |
-            cd /opt/Tonetracker/Tone-Tracker-Frontend
+            cd /opt/demo
             git pull
             yarn install
             yarn build
@@ -90,4 +90,4 @@ jobs:
         run: echo "Nothing to clean up for Azure CLI"
 
       - name: Deployment complete message
-        run: echo "Deployment Completed. Please check the deployed changes on the development server!"
+        run: echo "Deployment is Completed. Please check the deployed changes on the development server!"
