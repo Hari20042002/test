@@ -43,8 +43,8 @@ jobs:
       - name: Whitelist inbound rule in network security group
         run: |
           IP=${{ env.ip }}
-          NSG_NAME="your-nsg-name"  # Replace with your Network Security Group name
-          RG_NAME="your-resource-group"  # Replace with your Resource Group name
+          NSG_NAME="Demo-nsg"  # Replace with your Network Security Group name
+          RG_NAME="Demo_group"  # Replace with your Resource Group name
           az network nsg rule create \
             --resource-group $RG_NAME \
             --nsg-name $NSG_NAME \
@@ -77,8 +77,8 @@ jobs:
       - name: Remove inbound rule in network security group
         run: |
           IP=${{ env.ip }}
-          NSG_NAME="your-nsg-name"  # Replace with your Network Security Group name
-          RG_NAME="your-resource-group"  # Replace with your Resource Group name
+          NSG_NAME="Demo-nsg"  # Replace with your Network Security Group name
+          RG_NAME="Demo_group"  # Replace with your Resource Group name
           az network nsg rule delete \
             --resource-group $RG_NAME \
             --nsg-name $NSG_NAME \
