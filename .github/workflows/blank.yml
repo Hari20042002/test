@@ -70,9 +70,7 @@ jobs:
           script: |
             cd /opt/demo
             git pull
-            yarn install
-            yarn build
-            sudo pm2 restart all
+            echo "Hello, this is example content." > example.txt
 
       - name: Remove inbound rule in network security group
         run: |
